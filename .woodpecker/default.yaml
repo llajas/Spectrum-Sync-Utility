@@ -15,6 +15,7 @@ steps:
         - pull_request
         - tag
         - manual
+        - cron
 
   # =============================================================================
   # Tag Generation - Main branch only
