@@ -10,12 +10,14 @@ steps:
       skip-dirs: vendor,node_modules,.git
       dir: .
     when:
-      event:
-        - push
-        - pull_request
-        - tag
-        - manual
-        - cron
+      - event:
+          - push
+          - pull_request
+          - tag
+          - manual
+      - event: cron
+        branch: main
+        cron: "Rebuild"
 
   # =============================================================================
   # Tag Generation - Main branch only
