@@ -1,13 +1,11 @@
 when:
-  event:
-    - push
-    - pull_request
-    - tag
-    - manual
+  event: cron
+  branch: main
+  cron: "Rebuild"
 
 steps:
   # =============================================================================
-  # Security Scanning - Runs on all branches/PRs
+  # Daily Rebuild - Dedicated cron workflow
   # =============================================================================
   - name: scan-filesystem
     image: woodpeckerci/plugin-trivy
@@ -17,9 +15,6 @@ steps:
       skip-dirs: vendor,node_modules,.git
       dir: .
 
-  # =============================================================================
-  # Tag Generation - Main branch only
-  # =============================================================================
   - name: generate-tags
     image: ghcr.io/dvjn/woodpecker-docker-tags-plugin
     settings:
@@ -31,16 +26,7 @@ steps:
         semver --format {{version}}
         sha
       tags_file: .tags
-    when:
-      branch: main
-      event:
-        - push
-        - tag
-        - manual
 
-  # =============================================================================
-  # Image Build - Main branch only
-  # =============================================================================
   - name: build-image
     image: woodpeckerci/plugin-docker-buildx
     settings:
@@ -52,19 +38,10 @@ steps:
         from_secret: registry_username
       password:
         from_secret: registry_token
-    when:
-      branch: main
-      event:
-        - push
-        - tag
-        - manual
     depends_on:
       - generate-tags
       - scan-filesystem
 
-  # =============================================================================
-  # Image Security Scanning - After build
-  # =============================================================================
   - name: scan-image
     image: woodpeckerci/plugin-trivy
     settings:
@@ -76,11 +53,5 @@ steps:
         from_secret: registry_username
       registry-password:
         from_secret: registry_token
-    when:
-      branch: main
-      event:
-        - push
-        - tag
-        - manual
     depends_on:
       - build-image
